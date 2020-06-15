@@ -5,3 +5,12 @@
 在离线地图上显示一些汽车、飞机等模型，结合运动轨迹、姿态等显示出来。
 
 任何人如果兴趣的话都可以获取项目内容，至于怎么使用它完全由您，但要遵守你那里的法律规定。
+
+# build
+## vs22019
+```
+> git clone https://github.com/x1244/osgearth-ck.git
+> cd osgearth-ck
+osgearth-ck> xmake
+osgearth-ck> xmake run oe-ck simple.earth
+```
