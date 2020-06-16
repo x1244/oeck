@@ -1,3 +1,6 @@
+set_project("osgearth-ck")
+set_version("0.0.1", {build = "%Y%m%d%H%M"})
+set_languages("cxx14")
 target("oe-ck")
     set_kind("binary")
     add_includedirs("c:/tools/vs2019/include")
@@ -6,8 +9,4 @@ target("oe-ck")
     add_links("osgGA", "osgViewer")
     add_defines("WIN32")
     add_files("src/*.cpp")
-
--- version
-set_version("0.0.1", {build = "%Y%m%d%H%M"})
-set_languages("cxx14")
 
