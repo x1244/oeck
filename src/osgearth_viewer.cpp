@@ -25,6 +25,8 @@
 #include <osgEarth/EarthManipulator>
 #include <osgEarth/ExampleResources>
 #include <osgEarth/MapNode>
+#include <osgEarth/PlaceNode>
+#include <osgEarth/LabelNode>
 #include <osgEarth/ThreadingUtils>
 #include <iostream>
 
@@ -75,16 +77,71 @@ main(int argc, char** argv)
     // closer to the ground without near clipping. If you need more, use --logdepth
     viewer.getCamera()->setNearFarRatio(0.0001);
 
+    
+    osg::Group* root = new osg::Group();
     // load an earth file, and support all or our example command-line options
     // and earth file <external> tags    
     osg::Node* node = MapNodeHelper().load(arguments, &viewer);
     if ( node )
     {
-        viewer.setSceneData( node );
-        return Metrics::run(viewer);
+        root->addChild(node);
+        //return Metrics::run(viewer);
     }
     else
     {
         return usage(argv[0]);
     }
+
+    // find the map node that we loaded.
+    MapNode* mapNode = MapNode::findMapNode(node);
+    if ( !mapNode )
+        return usage(argv[0]);
+
+    // Group to hold all our annotation elements.
+    osg::Group* annoGroup = new osg::Group();
+    MapNode::get(node)->addChild( annoGroup );
+
+    // Make a group for labels
+    osg::Group* labelGroup = new osg::Group();
+    annoGroup->addChild( labelGroup );
+
+
+    // Style our labels:
+    Style labelStyle;
+    labelStyle.getOrCreate<TextSymbol>()->alignment() = TextSymbol::ALIGN_CENTER_CENTER;
+    labelStyle.getOrCreate<TextSymbol>()->fill()->color() = Color::Yellow;
+
+
+    // A lat/long SRS for specifying points.
+    const SpatialReference* geoSRS = mapNode->getMapSRS()->getGeographicSRS();
+
+
+    //--------------------------------------------------------------------
+
+    // A series of place nodes (an icon with a text label)
+    {
+        Style pm;
+        pm.getOrCreate<IconSymbol>()->url()->setLiteral( "../data/placemark32.png" );
+        pm.getOrCreate<IconSymbol>()->declutter() = true;
+        pm.getOrCreate<TextSymbol>()->halo() = Color("#5f5f5f");
+        pm.getOrCreate<TextSymbol>()->encoding()=TextSymbol::ENCODING_UTF8;
+        pm.getOrCreate<TextSymbol>()->font()="simhei.ttf";
+
+        // bunch of pins:
+        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, -74.00, 40.71), "New York"      , pm));
+
+        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, 116.42472, 39.90556), "北京" , pm));
+
+        // test with an LOD:
+        osg::LOD* lod = new osg::LOD();
+        lod->addChild( new PlaceNode(GeoPoint(geoSRS, 14.68, 50.0), "Prague", pm), 0.0, 2e6);
+        labelGroup->addChild( lod );
+
+        // absolute altitude:
+        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, -87.65, 41.90, 1000, ALTMODE_ABSOLUTE), "Chicago", pm));
+    }
+
+    viewer.setSceneData( root );
+    return viewer.run();
+    
 }
