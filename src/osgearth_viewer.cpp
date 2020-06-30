@@ -27,6 +27,7 @@
 #include <osgEarth/MapNode>
 #include <osgEarth/PlaceNode>
 #include <osgEarth/LabelNode>
+#include <osgEarth/ModelNode>
 #include <osgEarth/ThreadingUtils>
 #include <iostream>
 
@@ -139,6 +140,18 @@ main(int argc, char** argv)
 
         // absolute altitude:
         labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, -87.65, 41.90, 1000, ALTMODE_ABSOLUTE), "Chicago", pm));
+    }
+
+    //--------------------------------------------------------------------
+    //这一模型显示并不成功
+    // a model node with auto scaling.
+    {
+        Style style;
+        style.getOrCreate<ModelSymbol>()->autoScale() = true;
+        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cessna.osgb.300.scale");
+        ModelNode* modelNode = new ModelNode(mapNode, style); 
+        modelNode->setPosition(GeoPoint(geoSRS, 116, 39, 30000, ALTMODE_ABSOLUTE));
+        annoGroup->addChild(modelNode);
     }
 
     viewer.setSceneData( root );
