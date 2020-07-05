@@ -12,5 +12,5 @@
 > git clone https://github.com/x1244/osgearth-ck.git
 > cd osgearth-ck
 osgearth-ck> xmake
-osgearth-ck> xmake run oe-ck simple.earth
+osgearth-ck> xmake run oeck simple.earth
 ```
