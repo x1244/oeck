@@ -28,7 +28,10 @@
 #include <osgEarth/PlaceNode>
 #include <osgEarth/LabelNode>
 #include <osgEarth/ModelNode>
+#include <osgEarth/ShaderGenerator>
+#include <osgEarth/Registry>
 #include <osgEarth/ThreadingUtils>
+#include <osgDB/ReadFile>
 #include <iostream>
 
 #include <osgEarth/Metrics>
@@ -69,7 +72,8 @@ main(int argc, char** argv)
     osgDB::Registry::instance()->getObjectWrapperManager()->findWrapper("osg::Image");
 
     // install our default manipulator (do this before calling load)
-    viewer.setCameraManipulator( new EarthManipulator(arguments) );
+    osg::ref_ptr<osgEarth::Util::EarthManipulator> earthManipulator = new EarthManipulator(arguments);
+    viewer.setCameraManipulator(earthManipulator);
 
     // disable the small-feature culling
     viewer.getCamera()->setSmallFeatureCullingPixelSize(-1.0f);
@@ -77,6 +81,7 @@ main(int argc, char** argv)
     // set a near/far ratio that is smaller than the default. This allows us to get
     // closer to the ground without near clipping. If you need more, use --logdepth
     viewer.getCamera()->setNearFarRatio(0.0001);
+//    viewer.getCamera()->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF|osg::StateAttribute::OVERRIDE);
 
     
     osg::Group* root = new osg::Group();
@@ -143,18 +148,42 @@ main(int argc, char** argv)
     }
 
     //--------------------------------------------------------------------
-    //这一模型显示并不成功
     // a model node with auto scaling.
     {
         Style style;
         style.getOrCreate<ModelSymbol>()->autoScale() = true;
-        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cessna.osgb.300.scale");
+        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cessna.osg.500.scale");
+//        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cow.osg.5000.scale");
+//        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/boxman.osg.50.scale");
         ModelNode* modelNode = new ModelNode(mapNode, style); 
-        modelNode->setPosition(GeoPoint(geoSRS, 116, 39, 30000, ALTMODE_ABSOLUTE));
+        modelNode->setPosition(GeoPoint(geoSRS, -90., 10., 50000, ALTMODE_ABSOLUTE));
+        //通过style添加模型，不需要再设置染色器
+        osgEarth::Registry::shaderGenerator().run(modelNode);
         annoGroup->addChild(modelNode);
     }
 
+	//添加模型
+	{
+		osg::Node* model = osgDB::readNodeFile("../data/cow.osgt");
+        //通过原始模型添加，需要给模型一个染色器
+        osgEarth::Registry::shaderGenerator().run(model);
+		//osg中光照只会对有法线的模型起作用，而模型经过缩放后法线是不会变得，
+		//所以需要手动设置属性，让法线随着模型大小变化而变化。GL_NORMALIZE 或 GL_RESCALE_NORMAL
+		model->getOrCreateStateSet()->setMode(GL_RESCALE_NORMAL, osg::StateAttribute::ON);
+
+		osg::Matrix Lmatrix;
+		geoSRS->getEllipsoid()->computeLocalToWorldTransformFromLatLongHeight(osg::DegreesToRadians(40.0), osg::DegreesToRadians(116.0), 100000.0, Lmatrix);
+		//放大一些，方便看到
+		Lmatrix.preMult(osg::Matrix::scale(osg::Vec3(10000, 10000, 10000)));
+
+		osg::MatrixTransform* mt = new osg::MatrixTransform;
+		mt->setMatrix(Lmatrix);
+		mt->addChild(model);
+		annoGroup->addChild(mt);
+	}
+
     viewer.setSceneData( root );
+    earthManipulator->setViewpoint(Viewpoint("", 116, 40, 10000.0, -2.50, -90.0, 1.5e6));
     return viewer.run();
     
 }

@@ -8,6 +8,6 @@ target("oeck")
     add_links("osg", "osgDB", "osgEarth", "OpenThreads")
     add_links("osgGA", "osgViewer")
     add_defines("WIN32")
-    add_files("src/*.cpp")
+    add_files("src/osgearth_viewer.cpp")
     add_installfiles("earthfile/simple.earth", {prefixdir = "bin"})
 
