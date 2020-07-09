@@ -74,6 +74,11 @@ int main(int argc, char* argv[])
 		mt->addChild(model);
 		root->addChild(mt);
 	}
+
+
+
+
+
 	viewer->setSceneData(root);
 
 	//配置窗口

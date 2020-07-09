@@ -24,6 +24,8 @@
 #include <osgEarth/Notify>
 #include <osgEarth/EarthManipulator>
 #include <osgEarth/ExampleResources>
+#include <osgEarth/FeatureNode>
+#include <osgEarth/GeometryFactory>
 #include <osgEarth/MapNode>
 #include <osgEarth/PlaceNode>
 #include <osgEarth/LabelNode>
@@ -35,12 +37,13 @@
 #include <iostream>
 
 #include <osgEarth/Metrics>
+#include <iostream>
 
 #define LC "[viewer] "
 
 using namespace osgEarth;
 using namespace osgEarth::Util;
-
+using namespace std;
 int
 usage(const char* name)
 {
@@ -148,17 +151,36 @@ main(int argc, char** argv)
     }
 
     //--------------------------------------------------------------------
+    ModelNode *mm = nullptr;
     // a model node with auto scaling.
     {
+        struct C : public osg::NodeCallback {
+            C(const SpatialReference* geoSRS):srs(geoSRS){}
+            void operator()(osg::Node* n, osg::NodeVisitor* nv) {
+                static int i=0;
+                static double x = -90.;
+                i++;
+                if(i%30 == 0){
+                    x += 0.1;
+                    static_cast<ModelNode*>(n)->setPosition(GeoPoint(srs, x, 10., 50000, ALTMODE_ABSOLUTE));
+                }
+                traverse(n, nv);
+            }
+        private:
+            const SpatialReference* srs;
+            
+        };
         Style style;
         style.getOrCreate<ModelSymbol>()->autoScale() = true;
         style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cessna.osg.500.scale");
 //        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cow.osg.5000.scale");
 //        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/boxman.osg.50.scale");
         ModelNode* modelNode = new ModelNode(mapNode, style); 
+        mm = modelNode;
         modelNode->setPosition(GeoPoint(geoSRS, -90., 10., 50000, ALTMODE_ABSOLUTE));
         //通过style添加模型，不需要再设置染色器
-        osgEarth::Registry::shaderGenerator().run(modelNode);
+//        osgEarth::Registry::shaderGenerator().run(modelNode);
+        //modelNode->addCullCallback(new C(geoSRS));
         annoGroup->addChild(modelNode);
     }
 
@@ -182,8 +204,82 @@ main(int argc, char** argv)
 		annoGroup->addChild(mt);
 	}
 
+
+    // A path using great-circle interpolation.
+    // Keep a pointer to it so we can modify it later on.
+    FeatureNode* pathNode = 0;
+    {
+        struct C : public osg::NodeCallback {
+            C(Geometry* p, const SpatialReference* srs)
+                : path(p)
+            , geoSRS(srs){}
+            void operator()(osg::Node* n, osg::NodeVisitor* nv) {
+                static int i=0;
+                static int ix = 0;
+                ++i;
+                if (i % 2 == 0){
+                    ++ix;
+                    if(ix >= path->size()){
+                        ix = 0;
+                    }
+                    const osg::Vec3d& px = path->at(ix);
+					auto mm = static_cast<ModelNode*>(n);
+                    mm->setPosition(GeoPoint(geoSRS, px.x(), px.y(), px.z(), ALTMODE_ABSOLUTE));
+					if(ix < 200){
+						osg::Quat quat(osg::DegreesToRadians(-90.), osg::Z_AXIS);
+						mm->setLocalRotation(quat);
+					}
+					else{
+						osg::Quat quat(osg::DegreesToRadians(180.), osg::Z_AXIS);
+						mm->setLocalRotation(quat);
+					}
+                }
+                traverse(n, nv);
+            }
+        private:
+            Geometry* path;
+            const SpatialReference* geoSRS;
+        };
+        Geometry* path = new LineString();
+        for(int ix = 0; ix < 200; ++ix){
+            path->push_back(osg::Vec3d(124.0 - ix/10., 38., 50000. + ix*1000));
+        }
+        for(int ix = 0; ix < 100; ++ix){
+            path->push_back(osg::Vec3d(104.0, 38. + ix/10., 250000 - ix*2000));
+        }
+
+        mm->addCullCallback(new C(path, geoSRS));
+
+        Feature* pathFeature = new Feature(path, geoSRS);
+//        pathFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
+
+        Style pathStyle;
+        pathStyle.getOrCreate<LineSymbol>()->stroke()->color() = Color::White;
+        pathStyle.getOrCreate<LineSymbol>()->stroke()->width() = 1.0f;
+        pathStyle.getOrCreate<LineSymbol>()->stroke()->smooth() = true;
+        pathStyle.getOrCreate<LineSymbol>()->tessellationSize() = 75000;
+        pathStyle.getOrCreate<PointSymbol>()->size() = 8;
+        pathStyle.getOrCreate<PointSymbol>()->fill()->color() = Color::Red;
+        pathStyle.getOrCreate<PointSymbol>()->smooth() = true;
+//        pathStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_TO_TERRAIN;
+        pathStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_GPU;
+        pathStyle.getOrCreate<RenderSymbol>()->depthOffset()->enabled() = true;
+
+        //OE_INFO << "Path extent = " << pathFeature->getExtent().toString() << std::endl;
+
+        pathNode = new FeatureNode(pathFeature, pathStyle);
+        annoGroup->addChild( pathNode );
+
+    }
+
     viewer.setSceneData( root );
     earthManipulator->setViewpoint(Viewpoint("", 116, 40, 10000.0, -2.50, -90.0, 1.5e6));
     return viewer.run();
     
 }
+#ifdef XXX
+<model name ="model" driver="simple">
+    <url>../data/red_flag.osg.100,100,100.scale</url>
+    <location>-74.018 40.717 10</location>
+</model>
+#endif

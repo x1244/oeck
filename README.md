@@ -1,4 +1,6 @@
-# osgearth-ck
+# oeck
+osgearth-ck
+
 基于osgearth做一些3D展示
 
 做这个项目的起因是需要做一些离线地图的展示，我的初步想法是基于osgEarth来做。
@@ -12,5 +14,5 @@
 > git clone https://github.com/x1244/oeck.git
 > cd oeck
 oeck> xmake
-oeck> xmake run oeck simple.earth
+oeck> oeck simple.earth
 ```
