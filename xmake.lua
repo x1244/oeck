@@ -10,4 +10,5 @@ target("oeck")
     add_defines("WIN32")
     add_files("src/osgearth_viewer.cpp")
     add_installfiles("earthfile/simple.earth", {prefixdir = "bin"})
+    
 

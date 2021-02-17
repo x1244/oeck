@@ -55,8 +55,7 @@ usage(const char* name)
 }
 
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     osg::ArgumentParser arguments(&argc,argv);
 
@@ -226,12 +225,14 @@ main(int argc, char** argv)
 					auto mm = static_cast<ModelNode*>(n);
                     mm->setPosition(GeoPoint(geoSRS, px.x(), px.y(), px.z(), ALTMODE_ABSOLUTE));
 					if(ix < 200){
-						osg::Quat quat(osg::DegreesToRadians(-90.), osg::Z_AXIS);
-						mm->setLocalRotation(quat);
+						osg::Quat quatz(osg::DegreesToRadians(-90.), osg::Z_AXIS);
+                        osg::Quat quaty(osg::DegreesToRadians(12.5), osg::Y_AXIS);
+						mm->setLocalRotation(quatz*quaty);
 					}
 					else{
-						osg::Quat quat(osg::DegreesToRadians(180.), osg::Z_AXIS);
-						mm->setLocalRotation(quat);
+						osg::Quat quatz(osg::DegreesToRadians(180.), osg::Z_AXIS);
+                        osg::Quat quaty(osg::DegreesToRadians(-23.), osg::X_AXIS);
+						mm->setLocalRotation(quatz*quaty);
 					}
                 }
                 traverse(n, nv);
@@ -275,7 +276,6 @@ main(int argc, char** argv)
     viewer.setSceneData( root );
     earthManipulator->setViewpoint(Viewpoint("", 116, 40, 10000.0, -2.50, -90.0, 1.5e6));
     return viewer.run();
-    
 }
 #ifdef XXX
 <model name ="model" driver="simple">
