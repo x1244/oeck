@@ -339,3 +339,17 @@ HAVE_DOT               = NO
 osgearth>doxygen docs/Doxyfile
 ```
 
+## osgQt
+
+gitHub找到`openscenegraph/osgQt`
+`commit 2cb70673a4e83a618290e7ee66d52402a94ec3f6`
+```
+> cd /path/to/osgQt
+> mkdir build
+> cd build
+build> cmake -DCMAKE_PREFIX_PATH="c:/tools/vs2019;C:/Qt/Qt5.12.8/5.12.8/msvc2017_64" -DCMAKE_INSTALL_PREFIX="c:/tools/vs2019" ..
+build> msbuild ALL_BUILD.vcxproj /m /p:Configuration="Release"
+build> msbuild INSTALL.vcxproj /p:Configuration="Release"
+```
+
+在环境变量中加入`C:/Qt/Qt5.12.8/5.12.8/msvc2017_64`，测试`osgviewerQt cow.osgt`
