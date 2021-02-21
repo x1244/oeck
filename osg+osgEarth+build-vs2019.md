@@ -305,32 +305,11 @@ buildms> msbuild INSTALL.vcxproj /p:Configuration="Release"
 
 osgearth有Github工程https://github.com/gwaldron/osgearth，下载其源码https://github.com/gwaldron/osgearth.git
 
-`commit:16596ed87929fcabc6d00efa2f216f806deac832` __使用该版本__
+## osgearth
 
-当前的osgearth与geos有冲突，修改`src\osgEarth\GEOS.cpp`第66行
+osgearth有Github工程https://github.com/gwaldron/osgearth，下载其源码https://github.com/gwaldron/osgearth.git
 
-```
-geom::CoordinateSequence* seq = factory->create( coords ).release();
-```
-
-第144行将`geom::Geometry*`修改为类型`geom::LinearRing*`
-
-```
-std::vector<geom::LinearRing*>* holes = poly->getHoles().size() > 0 ? new std::vector<geom::LinearRing*>() : 0L;
-```
-
-第154行
-
-```
-holes->push_back(static_cast<geom::LinearRing*>(hole));
-
-```
-
-因与`glew`冲突，修改`src\applications\CMakeLists.txt`，注释
-
-```
-#ADD_SUBDIRECTORY(osgearth_imgui)
-```
+`commit 342fcadf4c8892ba84841cb5b4162bdc51519e3c` __V3.1.0可以直接编译，更适用__
 
 然后
 
@@ -345,18 +324,18 @@ buildms> msbuild INSTALL.vcxproj /p:Configuration="Release"
 
 ### 文档
 
-修改`osgearth/docs/Doxyfile`，因为可能在生成图像中有些冲突，所以不使用dot.exe生成，而用原生doxygen生成类层次。
+### 文档
+
+修改`docs/Doxyfile`，因为可能在生成图像中有些冲突，所以不使用dot.exe生成，而用原生doxygen生成类层次。
 
 ```
-`PROJECT_NAME           = "osgEarth"
-PROJECT_NUMBER         = 3.0.2
-PROJECT_BRIEF          = www.osgearth.com
-OUTPUT_DIRECTORY       = oeDocumentation
+PROJECT_NAME           = "osgEarth"
+PROJECT_NUMBER         = 3.1.0
+OUTPUT_DIRECTORY       = oedocs
 HAVE_DOT               = NO
 ```
 
 ```
-> cd docs
-docs> doxygen Doxyfile
+osgearth>doxygen docs/Doxyfile
 ```
 
