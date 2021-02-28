@@ -4,6 +4,7 @@
 # Xmake cache
 .xmake/
 build/
+data/
 
 # for VS Code
 .vscode/
