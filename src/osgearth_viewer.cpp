@@ -46,6 +46,7 @@
 #include <iostream>
 #include "earth_loader.h"
 #include "panorama.h"
+#include "panorama_camera.h"
 #define LC "[viewer] "
 
 using namespace osgEarth;
@@ -275,6 +276,7 @@ int main(int argc, char** argv)
 #endif//EARTH
 
 	//setCanvas(&viewer);
+	//添加背景不成功
 	//root->addChild(createBackground("../data/1.png"));
 	osg::Camera* fg = createForeground("../data/1.png");
 	root->addChild(fg);
@@ -468,7 +470,23 @@ osg::Camera* createForeground(std::string strImg)
 
     geode1->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     geode1->addDrawable(geometry1);
-    camera1->addChild(geode1);
+	
+	osg::ref_ptr<osg::MatrixTransform> t1 =new osg::MatrixTransform();
+	t1->setMatrix(osg::Matrix::translate(-1920,0,0));
+	t1->addChild(geode1);
+	osg::ref_ptr<osg::MatrixTransform> t2 =new osg::MatrixTransform();
+	t2->setMatrix(osg::Matrix::translate(0,0,0));
+	t2->addChild(geode1);
+	osg::ref_ptr<osg::MatrixTransform> t3 =new osg::MatrixTransform();
+	t3->setMatrix(osg::Matrix::translate(1920,0,0));
+	t3->addChild(geode1);
+
+	osg::ref_ptr<osg::MatrixTransform> tranf =new osg::MatrixTransform();
+	tranf->addChild(t1);
+	tranf->addChild(t2);
+	tranf->addChild(t3);
+	tranf->setUpdateCallback(new PanoramaCamera(tranf.get()));
+    camera1->addChild(tranf);
 
     return camera1.release();
 }

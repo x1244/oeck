@@ -8,7 +8,7 @@ target("oeck")
     add_links("osg", "osgText", "osgDB", "osgEarth", "OpenThreads")
     add_links("osgGA", "osgViewer")
     add_defines("WIN32")
-    add_files("src/osgearth_viewer.cpp", "src/panorama.cpp", "src/earth_loader.cpp")
+    add_files("src/osgearth_viewer.cpp", "src/panorama.cpp", "src/panorama_camera.cpp", "src/earth_loader.cpp")
     add_installfiles("earthfile/simple.earth", {prefixdir = "bin"})
     
 target("ctrl")
