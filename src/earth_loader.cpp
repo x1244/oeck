@@ -42,12 +42,15 @@
 #include <osgGA/StateSetManipulator>
 #include <osgViewer/ViewerEventHandlers>
 
+#include <iostream>
+
 #define KML_PUSHPIN_URL "../data/placemark32.png"
 
 #define VP_MIN_DURATION      2.0     // minimum fly time.
 #define VP_METERS_PER_SECOND 2500.0  // fly speed
 #define VP_MAX_DURATION      2.0 //8.0     // maximum fly time.
 
+using namespace std;
 using namespace osgEarth;
 using namespace osgEarth::Util;
 using namespace osgEarth::Util::Controls;
@@ -277,6 +280,7 @@ EarthLoader::parse(MapNode*             mapNode,
                      osg::Group*          root,
                      LabelControl*        userLabel ) const
 {
+
     VBox* vbox = new VBox();
     vbox->setAbsorbEvents( true );
     vbox->setBackColor( Color(Color::Black, 0.8) );
@@ -316,7 +320,6 @@ EarthLoader::parse(MapNode*             mapNode,
     {
         view->setCameraManipulator( new osgGA::AnimationPathManipulator(animpath) );
     }
-
     // vertical field of view:
     float vfov = -1.0f;
     if (args.read("--vfov", vfov) && vfov > 0.0f)
@@ -432,10 +435,11 @@ EarthLoader::parse(MapNode*             mapNode,
         view->addEventHandler( new ActivityMonitorTool(vbox) );
         canvas->addControl( vbox );
     }
-
+    //对数深度缓冲区对HUD相机有影响
     // Install logarithmic depth buffer on main camera
     if ( useLogDepth )
     {
+		cout <<"use log depth" <<endl;
         OE_INFO << LC << "Activating logarithmic depth buffer (vertex-only) on main camera" << std::endl;
         osgEarth::Util::LogarithmicDepthBuffer logDepth;
         logDepth.setUseFragDepth( false );
@@ -444,6 +448,7 @@ EarthLoader::parse(MapNode*             mapNode,
 
     else if ( useLogDepth2 )
     {
+ 		cout <<"use log depth2" <<endl;
         OE_INFO << LC << "Activating logarithmic depth buffer (precise) on main camera" << std::endl;
         osgEarth::Util::LogarithmicDepthBuffer logDepth;
         logDepth.setUseFragDepth( true );

@@ -50,3 +50,10 @@
     </FeatureModel>
 ```
 
+# HUD
+
+`HUD`的实现有两种方式，基于`osg`的前景`camera`模式和基于`osgearth`控件画布方式。基于`camera`的方式有更多的实现和更多的参考，基于`ControlCanvas`的实现相对适用于静态HUD。
+
+在使用`camera`实现时，在地球由`MapNodeHelper::load`加载时，如果未指定`--nologdepth`，则启用对数深度缓冲区，`camera`无法正确渲染，而`ControlCanvas`不受对数深度缓冲区影响。这个应该可以设置`camear`的z来实现，待尝试。
+
+`ControlCanvas`对于动态HUD的渲染，可以通过`ImageControl`来实现，需要使用RTT技术，先渲染到纹理，再设置到`ImageControl`，正在进行尝试。

@@ -112,11 +112,10 @@ int main(int argc, char** argv)
 	osg::ref_ptr<osg::Node> node = osgDB::readNodeFile(argv[1]);
 	root->addChild(node);
 #else
-    osg::Node* node = EarthLoader().load(arguments, &viewer);
+    osg::Node* node = MapNodeHelper().load(arguments, &viewer);
     if ( node )
     {
         root->addChild(node);
-        //return Metrics::run(viewer);
     }
     else
     {
@@ -128,7 +127,7 @@ int main(int argc, char** argv)
     MapNode* mapNode = MapNode::findMapNode(node);
     if ( !mapNode )
         return usage(argv[0]);
-//#define XXX 1
+#define XXX 1
 #ifdef XXX
     // Group to hold all our annotation elements.
     osg::Group* annoGroup = new osg::Group();
@@ -275,10 +274,10 @@ int main(int argc, char** argv)
 #endif	
 #endif//EARTH
 
-	setCanvas(&viewer);
+	//setCanvas(&viewer);
 	//root->addChild(createBackground("../data/1.png"));
-	//osg::Camera* fg = createForeground("../data/1.png");
-	//root->addChild(fg);
+	osg::Camera* fg = createForeground("../data/1.png");
+	root->addChild(fg);
 	//viewer.addSlave(fg);
 /*
 	auto mf = createHud("../data/1.png");
