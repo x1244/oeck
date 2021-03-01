@@ -44,6 +44,7 @@
 
 #include <osgEarth/Metrics>
 #include <iostream>
+#include "earth_loader.h"
 #include "panorama.h"
 #define LC "[viewer] "
 
@@ -104,12 +105,14 @@ int main(int argc, char** argv)
 
     // load an earth file, and support all or our example command-line options
     // and earth file <external> tags   
+#define EARTH 1
+#ifdef EARTH
 //#define YYY 1	
 #ifdef YYY
 	osg::ref_ptr<osg::Node> node = osgDB::readNodeFile(argv[1]);
 	root->addChild(node);
 #else
-    osg::Node* node = MapNodeHelper().load(arguments, &viewer);
+    osg::Node* node = EarthLoader().load(arguments, &viewer);
     if ( node )
     {
         root->addChild(node);
@@ -125,7 +128,7 @@ int main(int argc, char** argv)
     MapNode* mapNode = MapNode::findMapNode(node);
     if ( !mapNode )
         return usage(argv[0]);
-#define XXX 1
+//#define XXX 1
 #ifdef XXX
     // Group to hold all our annotation elements.
     osg::Group* annoGroup = new osg::Group();
@@ -270,11 +273,13 @@ int main(int argc, char** argv)
         annoGroup->addChild( pathNode );
     }
 #endif	
+#endif//EARTH
+
 	setCanvas(&viewer);
 	//root->addChild(createBackground("../data/1.png"));
 	//osg::Camera* fg = createForeground("../data/1.png");
 	//root->addChild(fg);
-	//----viewer.addSlave(fg);
+	//viewer.addSlave(fg);
 /*
 	auto mf = createHud("../data/1.png");
 	auto cam = hudCamera();
@@ -373,6 +378,7 @@ osg::Camera* createBackground(std::string strImg)
 void setCanvas(osgViewer::Viewer* v)
 {
 	auto cav = Controls::ControlCanvas::getOrCreate(v);
+	
 	osg::ref_ptr<Controls::LabelControl> label = new Controls::LabelControl;
 	label->setSize(800, 50);
 	label->setMargin(10);
@@ -401,10 +407,21 @@ void setCanvas(osgViewer::Viewer* v)
 }
 osg::Camera* createForeground(std::string strImg)
 {
+	
+	osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+	traits->x = 40;
+	traits->y = 40;
+	traits->width = 800;
+	traits->height = 600;
+	traits->windowDecoration = true;
+	traits->sharedContext = 0;
+	
+	osg::ref_ptr<osg::GraphicsContext> gc = osg::GraphicsContext::createGraphicsContext(traits);
+
 	osg::ref_ptr<osg::Geode> geode1 = new osg::Geode;
     osg::ref_ptr<osg::Geometry> geometry1 = new osg::Geometry;
     osg::ref_ptr<osg::Camera> camera1 = new osg::Camera;
-
+    //camera1->setGraphicsContext(gc);
     camera1->setAllowEventFocus(false);
     camera1->setProjectionMatrixAsOrtho2D(0, 1920, 0, 1280);
     camera1->setViewport(0, 0, 1920, 1280);
@@ -417,7 +434,7 @@ osg::Camera* createForeground(std::string strImg)
     camera1->setViewMatrix(osg::Matrix::identity());
 
     //压入顶点
-	double z = -1.;
+	double z = 0;
     osg::ref_ptr<osg::Vec3Array> vertex = new osg::Vec3Array;
     vertex->push_back(osg::Vec3(0.0,0.0,z));
     vertex->push_back(osg::Vec3(1920.0, 0.0, z));
@@ -450,10 +467,9 @@ osg::Camera* createForeground(std::string strImg)
     texture2d->setImage(0, img1);
     geometry1->getOrCreateStateSet()->setTextureAttributeAndModes(0,texture2d,osg::StateAttribute::ON);
 
-
-    camera1->addChild(geode1);
     geode1->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     geode1->addDrawable(geometry1);
+    camera1->addChild(geode1);
 
     return camera1.release();
 }
