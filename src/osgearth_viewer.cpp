@@ -32,6 +32,7 @@
 #include <osgEarth/ExampleResources>
 #include <osgEarth/FeatureNode>
 #include <osgEarth/GeometryFactory>
+#include <osgEarth/LogarithmicDepthBuffer>
 #include <osgEarth/MapNode>
 #include <osgEarth/PlaceNode>
 #include <osgEarth/LabelNode>
@@ -47,6 +48,8 @@
 #include "earth_loader.h"
 #include "panorama.h"
 #include "panorama_camera.h"
+#include "pick.h"
+
 #define LC "[viewer] "
 
 using namespace osgEarth;
@@ -114,6 +117,7 @@ int main(int argc, char** argv)
 	root->addChild(node);
 #else
     osg::Node* node = MapNodeHelper().load(arguments, &viewer);
+	cout <<"earth r:" <<node->getBound().radius() <<endl;
     if ( node )
     {
         root->addChild(node);
@@ -177,13 +181,16 @@ int main(int argc, char** argv)
     {
         Style style;
         //这里必须设置自动缩放
+		//autoScale可以对比cow2没设置的
+		//autoScale设置后，无论视点远近，看起来都一样大。
         style.getOrCreate<ModelSymbol>()->autoScale() = true;
-		//单屏，缩放比例为2
-        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cessna.osg.1.scale");
+        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cessna.osg.1000.scale");
+        //style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cessna.osg");
         ModelNode* modelNode = new ModelNode(mapNode, style);
         cessna = modelNode;
         modelNode->setPosition(GeoPoint(geoSRS, 121., 38., 50000, ALTMODE_ABSOLUTE));
         annoGroup->addChild(modelNode);
+		cout <<"cessna r:" <<modelNode->getBound().radius() <<endl;
     }
 	//添加模型
 	{
@@ -195,15 +202,32 @@ int main(int argc, char** argv)
 		model->getOrCreateStateSet()->setMode(GL_RESCALE_NORMAL, osg::StateAttribute::ON);
 
 		osg::Matrix Lmatrix;
-		geoSRS->getEllipsoid()->computeLocalToWorldTransformFromLatLongHeight(osg::DegreesToRadians(40.0), osg::DegreesToRadians(116.0), 100000.0, Lmatrix);
-		//放大一些，方便看到
+		geoSRS->getEllipsoid()->computeLocalToWorldTransformFromLatLongHeight(osg::DegreesToRadians(40.0), osg::DegreesToRadians(116.0), 0.0, Lmatrix);
+		//放大一些，可以看到
 		Lmatrix.preMult(osg::Matrix::scale(osg::Vec3(10000, 10000, 10000)));
 
 		osg::MatrixTransform* mt = new osg::MatrixTransform;
 		mt->setMatrix(Lmatrix);
 		mt->addChild(model);
 		annoGroup->addChild(mt);
+		cout <<"cow r:" <<mt->getBound().radius() <<endl;
 	}
+    {
+		//http://docs.osgearth.org/en/latest/faq.html
+		//手册上说通过以下方法，可以自动贴合到地形表面,但我没能实现
+        Style style;
+        //style.getOrCreate<ModelSymbol>()->autoScale() = true;
+        style.getOrCreate<ModelSymbol>()->url()->setLiteral("../data/cow.osg.1000.scale");
+        ModelNode* modelNode = new ModelNode(mapNode, style);
+		GeoTransform* xform = new GeoTransform();
+ 		cout <<"terrain:" <<mapNode->getTerrain() <<endl;
+        xform->setTerrain(mapNode->getTerrain());
+        GeoPoint point(geoSRS, 121.3, 38.8);
+        xform->setPosition(point);
+		xform->addChild(modelNode);
+		annoGroup->addChild(xform);
+		cout <<"cow2 r:" <<xform->getBound().radius() <<endl;
+    }
 
     // A path using great-circle interpolation.
     // Keep a pointer to it so we can modify it later on.
@@ -289,7 +313,10 @@ int main(int argc, char** argv)
 */	
     viewer.setSceneData( root );
     //earthManipulator->setViewpoint(Viewpoint("", 116, 40, 10000.0, -2.50, -90.0, 1.5e6));
+	//viewer.addEventHandler(new PickHandler(&viewer));
 	viewer.realize();  
+//    osgEarth::Util::LogarithmicDepthBuffer buf;
+//    buf.install( viewer.getCamera() );
     return viewer.run();
 }
 #endif
@@ -314,7 +341,6 @@ int main(int argc, char* argv[])
 	
     viewer1->setSceneData(group1.get());
     //viewer1->setUpViewInWindow(0, 0, 1920, 1280, 0);
-
     return viewer1->run();
 }
 #endif
