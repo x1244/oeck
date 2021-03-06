@@ -29,6 +29,7 @@
 
 #include <osgEarth/Notify>
 #include <osgEarth/EarthManipulator>
+#include <osgEarth/ElevationQuery>
 #include <osgEarth/ExampleResources>
 #include <osgEarth/FeatureNode>
 #include <osgEarth/GeometryFactory>
@@ -39,6 +40,7 @@
 #include <osgEarth/ModelNode>
 #include <osgEarth/ShaderGenerator>
 #include <osgEarth/Registry>
+#include <osgEarth/Terrain>
 #include <osgEarth/ThreadingUtils>
 #include <osgDB/ReadFile>
 #include <iostream>
@@ -70,6 +72,7 @@ osg::Camera* createBackground(std::string strImg);
 osg::Camera* createForeground(std::string strImg);
 osg::MatrixTransform* createHud(std::string str);
 osg::Camera* hudCamera();
+double getHeight(MapNode* map);
 //#define TEX 1
 #define XTT 1
 #ifdef XTT
@@ -315,8 +318,10 @@ int main(int argc, char** argv)
     //earthManipulator->setViewpoint(Viewpoint("", 116, 40, 10000.0, -2.50, -90.0, 1.5e6));
 	//viewer.addEventHandler(new PickHandler(&viewer));
 	viewer.realize();  
+	
 //    osgEarth::Util::LogarithmicDepthBuffer buf;
 //    buf.install( viewer.getCamera() );
+    cout <<"height: " <<getHeight(mapNode) <<endl;
     return viewer.run();
 }
 #endif
@@ -552,6 +557,19 @@ osg::Camera* hudCamera()
 	cam->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
     return cam.release();
 }
+
+double getHeight(MapNode* map)
+{
+    double out, outm;
+	map->getTerrain()->getHeight(map->getMapSRS(), 121.175, 38.736, &outm, &out);
+	cout <<"MSL: " <<outm <<" elli: " <<out <<endl;
+	return outm;
+    //osgEarth::ElevationQuery query(map->getMap());
+	//GeoPoint p(map->getMapSRS()->getGeographicSRS(), 121.175, 38.736);
+    //float h = query.getElevation(p);
+	//return h;
+}
+
 #ifdef PPP
 <model name ="model" driver="simple">
     <url>../data/red_flag.osg.100,100,100.scale</url>

@@ -57,3 +57,32 @@
 在使用`camera`实现时，在地球由`MapNodeHelper::load`加载时，如果未指定`--nologdepth`，则启用对数深度缓冲区，`camera`无法正确渲染，而`ControlCanvas`不受对数深度缓冲区影响。这个应该可以设置`camear`的z来实现，待尝试。
 
 `ControlCanvas`对于动态HUD的渲染，可以通过`ImageControl`来实现，需要使用RTT技术，先渲染到纹理，再设置到`ImageControl`，正在进行尝试。
+
+# 经纬度高程
+
+`osgearth_measure`给出了一个很好的经纬度高程获取方案，主要由以上代码完成
+
+```
+osg::Vec3d world;
+if ( _mapNode->getTerrain()->getWorldCoordsUnderMouse(aa.asView(), ea.getX(), ea.getY(), world) ){
+    GeoPoint map;
+    map.fromWorld( _mapNode->getMapSRS(), world );
+}
+```
+
+经过测试，`getHeight`方法也可获得指定点高程
+
+```
+double h, e;
+_mapNode->getTerrain()->getHeight(_mapNode->getMapSRS(), map.x(), map.y(), &h, &e);
+```
+
+但是另一处资料中的`ElevationQuery`并不能获取高程，代码如下，原因未知。
+
+```
+osgEarth::ElevationQuery query(_mapNode->getMap());
+GeoPoint p(_mapNode->getMapSRS(), map.x(), map.y());
+double r2;
+float qh = query.getElevation(p, 0., &r2);
+```
+
