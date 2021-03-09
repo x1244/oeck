@@ -277,7 +277,7 @@ int main(int argc, char** argv)
             path->push_back(osg::Vec3d(104.0, 38. + ix/10., 250000 - ix*2000));
         }
 		if(cessna){
-            cessna->addCullCallback(new C(path, geoSRS));
+            cessna->addUpdateCallback(new C(path, geoSRS));
 		}
 
         Feature* pathFeature = new Feature(path, geoSRS);
