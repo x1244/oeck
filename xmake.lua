@@ -21,6 +21,16 @@ target("model")
     add_defines("WIN32")
     add_files("src/model.cpp")
     add_installfiles("earthfile/simple.earth", {prefixdir = "bin"})
+
+target("quad")
+    set_kind("binary")
+    add_includedirs("c:/tools/vs2019/include")
+    add_linkdirs("c:/tools/vs2019/lib")
+    add_links("osg", "osgText", "osgDB", "osgEarth", "OpenThreads")
+    add_links("osgGA", "osgViewer", "osgUtil")
+    add_defines("WIN32")
+    add_files("src/rect.cpp")
+
 	
 target("elev")
     set_kind("binary")

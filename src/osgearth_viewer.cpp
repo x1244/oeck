@@ -22,6 +22,7 @@
 
 #include <osg/ref_ptr>
 #include <osg/Image>
+#include <osg/LineWidth>
 #include <osgText/Text>
 #include <osgViewer/Viewer>
 #include <osgEarth/Controls>
@@ -439,7 +440,6 @@ void setCanvas(osgViewer::Viewer* v)
 }
 osg::Camera* createForeground(std::string strImg)
 {
-	
 	osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
 	traits->x = 40;
 	traits->y = 40;
@@ -452,21 +452,9 @@ osg::Camera* createForeground(std::string strImg)
 
 	osg::ref_ptr<osg::Geode> geode1 = new osg::Geode;
     osg::ref_ptr<osg::Geometry> geometry1 = new osg::Geometry;
-    osg::ref_ptr<osg::Camera> camera1 = new osg::Camera;
-    //camera1->setGraphicsContext(gc);
-    camera1->setAllowEventFocus(false);
-    camera1->setProjectionMatrixAsOrtho2D(0, 1920, 0, 1280);
-    camera1->setViewport(0, 0, 1920, 1280);
-
-    camera1->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    camera1->setRenderOrder(osg::Camera::POST_RENDER);
-    camera1->setClearMask(GL_DEPTH_BUFFER_BIT);
- 	camera1->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
-    camera1->setClearColor(osg::Vec4(0.5, 0.3, 0.2, 0.1));
-    camera1->setViewMatrix(osg::Matrix::identity());
 
     //压入顶点
-	double z = 0;
+	const double z = -0.1;
     osg::ref_ptr<osg::Vec3Array> vertex = new osg::Vec3Array;
     vertex->push_back(osg::Vec3(0.0,0.0,z));
     vertex->push_back(osg::Vec3(1920.0, 0.0, z));
@@ -482,7 +470,7 @@ osg::Camera* createForeground(std::string strImg)
 
     //纹理坐标
     osg::ref_ptr<osg::Vec2Array> coord = new osg::Vec2Array;
-    coord->push_back(osg::Vec2(0.0,0.0));
+    coord->push_back(osg::Vec2(0.0, 0.0));
     coord->push_back(osg::Vec2(1.0, 0.0));
     coord->push_back(osg::Vec2(1.0, 1.0));
     coord->push_back(osg::Vec2(0.0, 1.0));
@@ -502,22 +490,74 @@ osg::Camera* createForeground(std::string strImg)
     geode1->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     geode1->addDrawable(geometry1);
 	
-	osg::ref_ptr<osg::MatrixTransform> t1 =new osg::MatrixTransform();
+	osg::ref_ptr<osg::MatrixTransform> t1 = new osg::MatrixTransform();
 	t1->setMatrix(osg::Matrix::translate(-1920,0,0));
 	t1->addChild(geode1);
-	osg::ref_ptr<osg::MatrixTransform> t2 =new osg::MatrixTransform();
+	osg::ref_ptr<osg::MatrixTransform> t2 = new osg::MatrixTransform();
 	t2->setMatrix(osg::Matrix::translate(0,0,0));
 	t2->addChild(geode1);
-	osg::ref_ptr<osg::MatrixTransform> t3 =new osg::MatrixTransform();
+	osg::ref_ptr<osg::MatrixTransform> t3 = new osg::MatrixTransform();
 	t3->setMatrix(osg::Matrix::translate(1920,0,0));
 	t3->addChild(geode1);
 
-	osg::ref_ptr<osg::MatrixTransform> tranf =new osg::MatrixTransform();
+	osg::ref_ptr<osg::MatrixTransform> tranf = new osg::MatrixTransform();
 	tranf->addChild(t1);
 	tranf->addChild(t2);
 	tranf->addChild(t3);
 	tranf->setUpdateCallback(new PanoramaCamera(tranf.get()));
-    camera1->addChild(tranf);
+	//标志-------
+	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+	osg::ref_ptr<osg::StateSet> stateset = geom->getOrCreateStateSet();
+    osg::ref_ptr<osg::LineWidth> lineWid = new osg::LineWidth(2.0f);
+    stateset->setAttribute(lineWid);
+	
+    osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array();
+    /*v->push_back(osg::Vec3(990,150.0,z + 0.1));
+    v->push_back(osg::Vec3(1010,150.0,z + 0.1));
+    v->push_back(osg::Vec3(1000,140.0,z + 0.1));
+    v->push_back(osg::Vec3(1000.0,160.0,z + 0.1));*/
+    v->push_back(osg::Vec3(990,150.0,z + 0.1));
+    v->push_back(osg::Vec3(1010,150.0,z + 0.1));
+    v->push_back(osg::Vec3(1010,160.0,z + 0.1));
+    v->push_back(osg::Vec3(990.0,160.0,z + 0.1));
+    geom->setVertexArray(v.get());
+    osg::ref_ptr<osg::Vec3Array> n=new osg::Vec3Array();
+    n->push_back(osg::Vec3(0.0,0.0,-1.0));
+    geom->setNormalArray(n.get());
+    geom->setNormalBinding(osg::Geometry::BIND_OVERALL);
+    osg::ref_ptr<osg::Vec4Array> c=new osg::Vec4Array();
+    c->push_back(osg::Vec4(1.0,0.0,0.0,0.8));
+    c->push_back(osg::Vec4(0.0,0.0,1.0,0.8));
+    c->push_back(osg::Vec4(1.0,1.0,0.0,0.8));
+    c->push_back(osg::Vec4(0.0,1.0,1.0,0.8));
+    geom->setColorArray(c.get());
+    geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_LOOP,0,4));
+    osg::ref_ptr<osg::Geode> geode2 = new osg::Geode;
+    geode2->addDrawable(geom.get());
+	osg::ref_ptr<osg::MatrixTransform> tranf2 =new osg::MatrixTransform();
+	tranf2->addChild(geode2); 
+	//tranf2->setUpdateCallback(new PanoramaCamera(tranf.get()));
+	
+
+    osg::ref_ptr<osg::Camera> camera1 = new osg::Camera;
+    //camera1->setGraphicsContext(gc);
+    camera1->setAllowEventFocus(false);
+    camera1->setProjectionMatrixAsOrtho2D(0, 1920, 0, 1280);
+    camera1->setViewport(0, 0, 1920, 1280);
+
+    camera1->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    camera1->setRenderOrder(osg::Camera::POST_RENDER);
+    camera1->setClearMask(GL_DEPTH_BUFFER_BIT);
+ 	camera1->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+    camera1->setClearColor(osg::Vec4(0.5, 0.3, 0.2, 0.1));
+    camera1->setViewMatrix(osg::Matrix::identity());
+	
+	osg::ref_ptr<osg::MatrixTransform> tranfx =new osg::MatrixTransform();
+	tranfx->addChild(tranf);
+	tranfx->addChild(tranf2);
+	
+    camera1->addChild(tranfx);
 
     return camera1.release();
 }
