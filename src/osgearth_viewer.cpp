@@ -48,6 +48,7 @@
 
 #include <osgEarth/Metrics>
 #include <iostream>
+#include "angle_site.h"
 #include "earth_loader.h"
 #include "panorama.h"
 #include "panorama_camera.h"
@@ -516,10 +517,10 @@ osg::Camera* createForeground(std::string strImg)
     v->push_back(osg::Vec3(1010,150.0,z + 0.1));
     v->push_back(osg::Vec3(1000,140.0,z + 0.1));
     v->push_back(osg::Vec3(1000.0,160.0,z + 0.1));*/
-    v->push_back(osg::Vec3(990,150.0,z + 0.1));
-    v->push_back(osg::Vec3(1010,150.0,z + 0.1));
-    v->push_back(osg::Vec3(1010,160.0,z + 0.1));
-    v->push_back(osg::Vec3(990.0,160.0,z + 0.1));
+    v->push_back(osg::Vec3(-20.0,-10.0,z + 0.1));
+    v->push_back(osg::Vec3(20.,-10.0,z + 0.1));
+    v->push_back(osg::Vec3(20.,10.0,z + 0.1));
+    v->push_back(osg::Vec3(-20.0,10.0,z + 0.1));
     geom->setVertexArray(v.get());
     osg::ref_ptr<osg::Vec3Array> n=new osg::Vec3Array();
     n->push_back(osg::Vec3(0.0,0.0,-1.0));
@@ -537,7 +538,8 @@ osg::Camera* createForeground(std::string strImg)
     geode2->addDrawable(geom.get());
 	osg::ref_ptr<osg::MatrixTransform> tranf2 =new osg::MatrixTransform();
 	tranf2->addChild(geode2); 
-	//tranf2->setUpdateCallback(new PanoramaCamera(tranf.get()));
+	tranf2->setMatrix(osg::Matrix::translate(osg::Vec3(1920./2., 160., 0.)));
+	tranf2->setUpdateCallback(new AngleSite(tranf2.get()));
 	
 
     osg::ref_ptr<osg::Camera> camera1 = new osg::Camera;
@@ -564,7 +566,7 @@ osg::Camera* createForeground(std::string strImg)
 
 osg::MatrixTransform* createHud(std::string str)
 {
-	double r = 1.5, h = -1.0;
+	double r = 1.5, h = -1.0; 
 	osg::Vec3 corner(-r, -r, h);
 	osg::Vec3 w(2*r, 0., 0.);
 	osg::Vec3 v(0., 2*r, 0.);
