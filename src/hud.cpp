@@ -1,4 +1,5 @@
 #include <osgViewer/Viewer>
+#include <osg/Notify>
 #include <osgDB/ReadFile>
 #include <osgEarth/Notify>
 #include <osgEarth/EarthManipulator>
@@ -18,7 +19,12 @@
 using namespace std;
 using namespace osgEarth;
 using namespace osgEarth::Util;
-
+class logHandler : public osg::NotifyHandler{
+public:
+void notify(osg::NotifySeverity severity, const char* msg) override{
+	spdlog::info("{{osg}} {}", msg);
+}
+};
 osg::Camera* createHud(std::string strImg);
 int usage(const char* name)
 {
@@ -31,19 +37,22 @@ int usage(const char* name)
 void logger()
 {
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    console_sink->set_level(spdlog::level::warn);
+    //console_sink->set_level(spdlog::level::warn);
     console_sink->set_pattern("[multi_sink_example] [%^%l%$] %v");
 	auto logger = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/multisink.txt", false);
 	spdlog::set_default_logger(std::make_shared<spdlog::logger>("multi_sink", spdlog::sinks_init_list({console_sink, logger})));
+#ifdef XXLOG
 	spdlog::info("spd 测试");
 	spdlog::info("spd log");
 	spdlog::warn("spd warning");
 	spdlog::error("spd cirtical");
+#endif
 }
 int main(int argc, char** argv)
 {
 	//OSG_NOTICE <<"测试" <<endl;
-	//logger();
+    osg::setNotifyHandler(new logHandler);
+	logger();
     osgEarth::initialize();
     osg::ArgumentParser arguments(&argc,argv);
     if ( arguments.read("--help") ) return usage(argv[0]);
