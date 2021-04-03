@@ -22,7 +22,34 @@ using namespace osgEarth::Util;
 class logHandler : public osg::NotifyHandler{
 public:
 void notify(osg::NotifySeverity severity, const char* msg) override{
-	spdlog::info("{{osg}} {}", msg);
+    string str(msg);
+    std::size_t end = str.find_last_not_of("\r\n");
+    if(end != std::string::npos){
+        str.erase(end + 1);
+    }else{}
+    if(str.empty()){
+        return;
+    }
+    switch(severity){
+        case osg::FATAL:
+            spdlog::critical("{{osg}} {}", str);
+            break;
+        case osg::WARN:
+            spdlog::warn("{{osg}} {}", str);
+            break;
+        case osg::NOTICE:
+            spdlog::info("{{osg}} {}", str);
+            break;
+        case osg::INFO:
+            spdlog::info("{{osg}} {}", str);
+            break;
+        case osg::DEBUG_INFO:
+            spdlog::debug("{{osg}} {}", str);
+            break;
+        case osg::DEBUG_FP:
+            spdlog::debug("{{osg}} {}", str);
+            break;
+    }
 }
 };
 osg::Camera* createHud(std::string strImg);
