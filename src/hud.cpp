@@ -1,5 +1,6 @@
 #include <osgViewer/Viewer>
 #include <osg/Notify>
+#include <osg/Program>
 #include <osgDB/ReadFile>
 #include <osgEarth/Notify>
 #include <osgEarth/EarthManipulator>
@@ -120,7 +121,7 @@ osg::Camera* createHud(std::string strImg)
     camera1->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     camera1->setRenderOrder(osg::Camera::POST_RENDER);
 //    camera1->setRenderOrder(osg::Camera::NESTED_RENDER);
-    camera1->setClearMask(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    camera1->setClearMask(GL_DEPTH_BUFFER_BIT);
     camera1->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
     camera1->setClearColor(osg::Vec4(0.5, 0.3, 0.2, 0.1));
     camera1->setViewMatrix(osg::Matrix::identity());
@@ -152,6 +153,7 @@ osg::Camera* createHud(std::string strImg)
     osg::ref_ptr<osg::Image> img1 = osgDB::readImageFile(strImg);
 
     osg::ref_ptr<osg::Texture2D> texture2d = new osg::Texture2D;
+//    texture2d->setDataVariance(osg::Object::DYNAMIC);
     texture2d->setImage(0, img1);
     geometry1->getOrCreateStateSet()->setTextureAttributeAndModes(0,texture2d,osg::StateAttribute::ON);
 
@@ -160,5 +162,8 @@ osg::Camera* createHud(std::string strImg)
     ss->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 	ss->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
     camera1->addChild(geode1);
+    osg::ref_ptr<osg::Program> np = new osg::Program;
+    camera1->getOrCreateStateSet()->setAttributeAndModes(np, osg::StateAttribute::ON);
+
     return camera1.release();
 }

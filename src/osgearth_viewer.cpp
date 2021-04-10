@@ -23,6 +23,7 @@
 #include <osg/ref_ptr>
 #include <osg/Image>
 #include <osg/LineWidth>
+#include <osg/Program>
 #include <osgText/Text>
 #include <osgViewer/Viewer>
 #include <osgEarth/Controls>
@@ -307,8 +308,8 @@ int main(int argc, char** argv)
 
 	//setCanvas(&viewer);
 	//添加背景不成功
-	//root->addChild(createBackground("../data/1.png"));
-	osg::Camera* fg = createForeground("../data/5.png");
+	/jroot->addChild(createBackground("../data/1.png"));
+	osg::Camera* fg = createForeground("../data/1.png");
 	root->addChild(fg);
 	//viewer.addSlave(fg);
 /*
@@ -519,8 +520,7 @@ osg::Camera* createForeground(std::string strImg)
 	tranf->addChild(t1);
 	tranf->addChild(t2);
 	tranf->addChild(t3);
-	//tranf->setUpdateCallback(new PanoramaCamera(tranf.get()));
-	//标志-------
+	tranf->setUpdateCallback(new PanoramaCamera(tranf.get()));
 	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
 	osg::ref_ptr<osg::StateSet> stateset = geom->getOrCreateStateSet();
     osg::ref_ptr<osg::LineWidth> lineWid = new osg::LineWidth(2.0f);
@@ -545,10 +545,10 @@ osg::Camera* createForeground(std::string strImg)
     geom->setColorArray(c.get());
     geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
     geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINE_LOOP,0,4));
-//    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS,0,4));
-//    geom->getOrCreateStateSet()->setTextureAttributeAndModes(0,texture2d,osg::StateAttribute::ON);
+    //geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS,0,4));
+    geom->getOrCreateStateSet()->setTextureAttributeAndModes(0,texture2d,osg::StateAttribute::ON);
     osg::ref_ptr<osg::Geode> geode2 = new osg::Geode;
-    //geode2->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    geode2->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     geode2->addDrawable(geom.get());
 	osg::ref_ptr<osg::MatrixTransform> tranf2 =new osg::MatrixTransform();
 	tranf2->addChild(geode2); 
@@ -559,9 +559,11 @@ osg::Camera* createForeground(std::string strImg)
 	
 	osg::ref_ptr<osg::MatrixTransform> tranfx =new osg::MatrixTransform();
 	tranfx->addChild(tranf);
-	//tranfx->addChild(tranf2);
+	tranfx->addChild(tranf2);
 	
     camera1->addChild(tranfx);
+    osg::ref_ptr<osg::Program> np = new osg::Program;
+    camera1->getOrCreateStateSet()->setAttributeAndModes(np, osg::StateAttribute::ON);
 
     return camera1.release();
 }
