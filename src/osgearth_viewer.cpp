@@ -170,9 +170,11 @@ int main(int argc, char** argv)
         pm.getOrCreate<TextSymbol>()->font()="simhei.ttf";
 
         // bunch of pins:
-        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, -74.00, 40.71), "New York"      , pm));
+        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, -74.00, 40.71), "New York", pm));
 
-        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, 116.42472, 39.90556), "北京" , pm));
+        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, 116.42472, 39.90556), "北京", pm));
+
+        labelGroup->addChild( new PlaceNode(GeoPoint(geoSRS, 91.135, 29.659), "Vtms", pm));
 
         // test with an LOD:
         osg::LOD* lod = new osg::LOD();
