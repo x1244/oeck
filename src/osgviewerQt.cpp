@@ -36,10 +36,12 @@
 
 #include <QApplication>
 #include <QSurfaceFormat>
+#include <QString>
+#include <QMessageBox>
 
 #include <iostream>
 
-
+using namespace std;
 int main( int argc, char** argv )
 {
 
@@ -90,7 +92,10 @@ int main( int argc, char** argv )
 
     //osgQOpenGLWidget widget(&arguments);
     OsgWidget widget(&arguments);
-
+#ifdef XXX
+    QObject::connect(&widget, &OsgWidget::msg, [](const QString& s){
+        QMessageBox::information(nullptr, QObject::tr("操作提示"), s);
+    });
     QObject::connect(&widget, &osgQOpenGLWidget::initialized,   [  &arguments,
                                                                    &widget ]
     {
@@ -207,6 +212,9 @@ int main( int argc, char** argv )
             std::cout << arguments.getApplicationName() << ": No data loaded" << std::endl;
             return 1;
         }
+        else{
+            emit widget.msg("model loaded");
+        }
 
         // any option left unread are converted into errors to write out later.
         arguments.reportRemainingOptionsAsUnrecognized();
@@ -229,9 +237,10 @@ int main( int argc, char** argv )
 
         return 0;
     });
-
-
+#endif
+    //QMessageBox::information(nullptr, QObject::tr("操作提示"), "before show");
     widget.show();
+    //QMessageBox::information(nullptr, QObject::tr("操作提示"), "after show");
 
     return app.exec();
 
