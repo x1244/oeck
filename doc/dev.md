@@ -58,6 +58,8 @@
 
 `ControlCanvas`对于动态HUD的渲染，可以通过`ImageControl`来实现，需要使用RTT技术，先渲染到纹理，再设置到`ImageControl`，正在进行尝试。
 
+对HUD的camera设置一个空的着色器程序，以取代osgearth默认的深度缓冲区筛选，可解决`MapNodeHelper::load`加载，默认使用`logdepth`的问题。
+
 # 经纬度高程
 
 `osgearth_measure`给出了一个很好的经纬度高程获取方案，主要由以上代码完成
@@ -86,3 +88,10 @@ double r2;
 float qh = query.getElevation(p, 0., &r2);
 ```
 
+# 片元着色器
+
+片元着色器输出的是最后的像素渲染结果，所以只需要一个输出`out vec4 color`即可，至于到缓冲区中的输出，还有待跟进。
+
+# OpenGL
+
+OpenGL 3.1以上的API中已经移除了 `glBegin / glEnd`

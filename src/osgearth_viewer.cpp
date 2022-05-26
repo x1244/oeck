@@ -50,7 +50,7 @@
 #include <osgEarth/Metrics>
 #include <iostream>
 #include "angle_site.h"
-#include "earth_loader.h"
+//#include "earth_loader.h"
 #include "panorama.h"
 #include "panorama_camera.h"
 #include "pick.h"
@@ -86,6 +86,11 @@ int main(int argc, char** argv)
     // help?
     if ( arguments.read("--help") )
         return usage(argv[0]);
+#ifdef EYE   
+    osg::DisplaySettings::instance()->setStereoMode(osg::DisplaySettings::ANAGLYPHIC);
+    osg::DisplaySettings::instance()->setEyeSeparation( 0.05f );
+    osg::DisplaySettings::instance()->setStereo( true );
+#endif
     // create a viewer:
     osgViewer::Viewer viewer(arguments);
 
@@ -201,6 +206,7 @@ int main(int argc, char** argv)
         annoGroup->addChild(modelNode);
 		cout <<"cessna r:" <<modelNode->getBound().radius() <<endl;
     }
+    #ifdef XXXTT
 	//添加模型
 	{
 		osg::Node* model = osgDB::readNodeFile("../data/cow.osgt");
@@ -221,6 +227,7 @@ int main(int argc, char** argv)
 		annoGroup->addChild(mt);
 		cout <<"cow r:" <<mt->getBound().radius() <<endl;
 	}
+    #endif
     {
 		//http://docs.osgearth.org/en/latest/faq.html
 		//手册上说通过以下方法，可以自动贴合到地形表面,但我没能实现
@@ -310,7 +317,7 @@ int main(int argc, char** argv)
 
 	//setCanvas(&viewer);
 	//添加背景不成功
-	/jroot->addChild(createBackground("../data/1.png"));
+	//root->addChild(createBackground("../data/1.png"));
 	osg::Camera* fg = createForeground("../data/1.png");
 	root->addChild(fg);
 	//viewer.addSlave(fg);
@@ -457,15 +464,16 @@ osg::Camera* createForeground(std::string strImg)
     osg::ref_ptr<osg::Camera> camera1 = new osg::Camera;
     camera1->setGraphicsContext(gc);
     camera1->setAllowEventFocus(false);
+    //camera1->setViewMatrixAsLookAt(osg::Vec3(0., 0., 3.*1920.), osg::Vec3(), osg::Y_AXIS);
     camera1->setProjectionMatrixAsOrtho2D(0, 1920, 0, 200);
-    camera1->setViewport(0, 0, 1920, 200);
+    camera1->setViewport(1920/4., 0, 1920/2., 200/2.);
 
     camera1->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     camera1->setRenderOrder(osg::Camera::POST_RENDER);
     camera1->setClearMask(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
  	camera1->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
     camera1->setClearColor(osg::Vec4(0.5, 0.3, 0.2, 0.1));
-    camera1->setViewMatrix(osg::Matrix::identity());
+    //camera1->setViewMatrix(osg::Matrix::identity());
 
 	osg::ref_ptr<osg::Geode> geode1 = new osg::Geode;
     osg::ref_ptr<osg::Geometry> geometry1 = new osg::Geometry;
@@ -488,8 +496,8 @@ osg::Camera* createForeground(std::string strImg)
     //纹理坐标
     osg::ref_ptr<osg::Vec2Array> coord = new osg::Vec2Array;
     coord->push_back(osg::Vec2(0.0, 0.0));
-    coord->push_back(osg::Vec2(1.0, 0.0));
-    coord->push_back(osg::Vec2(1.0, 1.0));
+    coord->push_back(osg::Vec2(2.0, 0.0));
+    coord->push_back(osg::Vec2(2.0, 1.0));
     coord->push_back(osg::Vec2(0.0, 1.0));
 	const unsigned int tu = 0;
     geometry1->setTexCoordArray(tu, coord);
@@ -503,6 +511,8 @@ osg::Camera* createForeground(std::string strImg)
 
     osg::ref_ptr<osg::Texture2D> texture2d = new osg::Texture2D;
     texture2d->setImage(tu, img1);
+    texture2d->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+    texture2d->setWrap(osg::Texture::WRAP_R, osg::Texture::REPEAT);
     geometry1->getOrCreateStateSet()->setTextureAttributeAndModes(tu,texture2d,osg::StateAttribute::ON);
 
     //geode1->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);

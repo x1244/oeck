@@ -1,9 +1,20 @@
 <!-- 
 osgEarth Sample - GDAL
 Demonstrates the simplest possible use of the GDAL layer to load a GeoTIFF image.
+        <profile>global-mercator</profile>
+        <profile>spherical-mercator</profile>
+        <profile>global-geodetic</profile>
 -->
 
 <map>
+    <options>
+    <!--profile 用来指定投影 spherical-mercator：圆球公式墨卡托 global-geodetic：全局大地椭圆
+    <profile>spherical-mercator</profile>
+    <profile>global-geodetic</profile>
+    <profile>plate-carre</profile>
+    -->
+    <profile>plate-carre</profile>
+    </options>
     <GDALImage name="World GeoTIFF">
         <url>../data/world.tif</url>
     </GDALImage>
@@ -38,6 +49,28 @@ Demonstrates the simplest possible use of the GDAL layer to load a GeoTIFF image
             </style>
         </styles>        
     </FeatureModel>
+    <extensions>
+        <graticule>
+            <!-- The approximate number of grid lines that you would like to see in your view extent.
+                 This number, along with the resolutions list, will be used to select a resolution on each view.
+             -->
+            <grid_lines>10</grid_lines>
+ 
+            <!-- The grid resolutions, in degrees that you want to see, all separated by a space and sorted from lowest resolution to highest -->
+            <!--
+            <resolutions>10 5 2.5 1.25</resolutions>
+             -->
+ 
+            <!-- The grid line color -->
+            <color>#f7a73f70</color>
+ 
+            <!-- The label color -->
+            <label_color>#ffff00ff</label_color>
+ 
+            <!-- Specify the line width -->
+            <line_width>2</line_width>
+        </graticule>
+    </extensions>
 	
 	<OGRFeatures name="china">
         <url>../data/chinashp.shp</url>
@@ -54,5 +87,24 @@ Demonstrates the simplest possible use of the GDAL layer to load a GeoTIFF image
             </style>
         </styles>        
     </FeatureModel>
-
+    
+    <Viewpoints>
+        <Viewpoint name="beijing china">
+            <heading>10</heading>
+            <height>100000.0</height>
+            <lat>38.5</lat>
+            <long>119.7</long>
+            <pitch>-34</pitch>
+            <range>200000</range>
+        </Viewpoint>
+        <Viewpoint name="yinchan ningxia">
+            <heading>0.</heading>
+            <height>200000.0</height>
+            <lat>37.5</lat>
+            <long>105.7</long>
+            <pitch>-60.</pitch>
+            <range>500000</range>
+        </Viewpoint>
+    </Viewpoints>    
+    
 </map>
