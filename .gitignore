@@ -5,6 +5,7 @@
 .xmake/
 build/
 data/
+deprecated/
 
 # for VS Code
 .vscode/

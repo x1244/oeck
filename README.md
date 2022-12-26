@@ -9,10 +9,26 @@ osgearth-ck
 任何人如果兴趣的话都可以获取项目内容，至于怎么使用它完全由您，但要遵守你那里的法律规定。
 
 # build
-## vs2019
+## 预编译库
+
+我将vs2022的预编译库放在了网盘上，链接：https://pan.baidu.com/s/117j0lkeJu2kk4SwEkdJ4KA 
+提取码：abcf。
+
+## vs2022
+
 ```
 > git clone https://github.com/x1244/oeck.git
 > cd oeck
 oeck> xmake
-oeck> oeck simple.earth
+oeck> viewer simple.earth
 ```
+
+* 20221227更新
+
+在vs2022下重新编译了大部分依赖库。
+
+以`GL3`模式编译了`OpenSceneGraph`。
+
+更新了编译手册，预编译的库放在了网盘上。
+
+只保留了地球加载的演示，其他示例因为`osgEarth` 更新还没有适配，感觉这次版本变动很大。
