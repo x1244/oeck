@@ -45,7 +45,16 @@ texCoord = osg_MultiTexCoord0.xy;
 
 ![colorcow](image/colorcow.jpg)
 
-这里怎么处理纹理才能得到`OSG_GL3_AVAILABLE`开启以前的牛效果还没搞清楚。
+采用如下处理方式，可近似得到`OSG_GL3_AVAILABLE`开启以前的牛效果。
+
+```
+    vec4 pos = normalize(osg_ModelViewMatrix*osg_Vertex);
+    pos = pos/pos.w;
+    vec3 e = normalize(ecLightDir - pos.xyz);
+    texCoord = reflect(-ecLightDir, ecNormal).xz; //环境纹理
+```
+
+![envcow](image/envcow.jpg)
 
 对于有纹理坐标的模型是能得到正确结果的。
 
