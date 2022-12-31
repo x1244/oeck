@@ -11,8 +11,8 @@ osgearth-ck
 # build
 ## 预编译库
 
-我将vs2022的预编译库放在了网盘上，链接：https://pan.baidu.com/s/117j0lkeJu2kk4SwEkdJ4KA 
-提取码：abcf。
+我将vs2022的预编译库放在了网盘上，链接：https://pan.baidu.com/s/1vtnv-cf76TbS9N6cc-0avw 
+提取码：abab。
 
 ## vs2022
 

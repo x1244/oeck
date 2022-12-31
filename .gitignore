@@ -6,6 +6,7 @@
 build/
 data/
 deprecated/
+imgui.ini
 
 # for VS Code
 .vscode/
