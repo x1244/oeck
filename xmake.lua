@@ -10,3 +10,5 @@ target("viewer")
     add_links("osgGA", "osgViewer", "osgUtil")
     add_defines("WIN32")
     add_files("src/earth_viewer.cpp")
+
+includes("demo")
