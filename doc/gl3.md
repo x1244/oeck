@@ -72,7 +72,7 @@ in vec3 osg_Normal;
 in vec4 osg_MultiTexCoord0;
 out vec4 color; 
 out vec2 texCoord;
- 
+
 void main() 
 { 
     vec3 ecNormal = normalize( osg_NormalMatrix * osg_Normal ); 
@@ -92,7 +92,6 @@ void main()
 { 
     fragData = color*texture(baseTexturex, texCoord);
 }
-
 ```
 
 ![building](image/building.jpg)
@@ -108,7 +107,7 @@ void main()
 osg着色器的内置uniform变量如下
 
 ```
-uniform int osg_FrameNumber：当前OSG程序运行的帧数；
+uniform uint osg_FrameNumber：当前OSG程序运行的帧数；无符号整数
 uniform float osg_FrameTime：当前OSG程序的运行总时间；
 uniform float osg_DeltaFrameTime：当前OSG程序运行每帧的间隔时间；
 uniform mat4 osg_ViewMatrix：当前OSG摄像机的观察矩阵；
@@ -137,4 +136,3 @@ OSG着色器的内置采样器如下
 ```
 uniform sampler2D baseTexturex;
 ```
-
