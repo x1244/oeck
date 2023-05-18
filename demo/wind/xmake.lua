@@ -15,3 +15,11 @@ target("wind_viewer")
 	add_syslinks("OpenGL32", "Shell32", "Advapi32")
     add_files("wind_viewer.cpp", "wind_scene.cpp", "wind_shader.cpp")
 
+target("wind_transform_feedback")
+    set_kind("binary")
+    add_links("osg", "osgDB", "osgEarth", "OpenThreads")
+    add_links("osgGA", "osgViewer", "osgUtil", "osgShadow")
+	add_links("glew32")
+	add_syslinks("OpenGL32", "Shell32", "Advapi32")
+    add_files("wind2.cpp", "wind_sprite.cpp", "wind_shader.cpp")
+

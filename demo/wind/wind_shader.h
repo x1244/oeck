@@ -93,10 +93,10 @@ void main()
 	    coord.xy = random2(vec2(seedx, seedy));
 	}
 	vec2 uv = texture(uvTexture, coord.xy).rg;
-	coord.z = length(uv);
-	vec2 offset = coord.z*(mini + uv*mpx)*0.00002; //转换到[0, 1]
+	vec2 offset = (mini + uv*mpx)*0.00002; //转换到[0, 1]
 	coord.xy = fract(coord.xy + offset);
 	coord.w = coord.w - osg_DeltaFrameTime;
+	coord.z = length(uv);
 	tex = coord;
 	gl_Position = osg_ModelViewProjectionMatrix*vec4(spx, 0.0, spy, 1.0);
 }
@@ -228,6 +228,143 @@ void main()
 	tex = texture(spriteTexture, vec2(u, v));
 	vec3 xyz = toECEF(tex.xy);
 	gl_Position = osg_ModelViewProjectionMatrix*vec4(xyz, 1.0);
+}
+)");
+/**\brief 精灵一TransformFeedback顶点着色器
+ */
+const std::string sprite_pass_1_vert(R"(#version 430
+#extension GL_ARB_enhanced_layouts : enable
+uniform float osg_FrameTime;
+uniform float osg_DeltaFrameTime;
+uniform mat4 osg_ModelViewProjectionMatrix;
+uniform float mini; //最小风速
+uniform float mpx;  //风速倍数
+layout (binding = 0) uniform sampler2D uvTexture;
+in  vec4 coordIn;
+layout (xfb_buffer=0, xfb_offset=0) out vec4 coordOut;
+out float speed;
+/**\brief 随机数发器
+ */
+float random(vec2 uv)
+{
+    return fract(cos(dot(uv, vec2(1.29898, 7.8233)))*437.585453123);
+}
+vec2 random2(vec2 uv)
+{
+    return vec2(random(uv), random(uv.yx));
+}
+void main()
+{
+    vec4 coord = coordIn;
+    //超时
+	if(coord.w < 0.01){
+	    float pt = random(vec2(gl_VertexID, fract(osg_DeltaFrameTime*1023.7)));
+	    coord.w = 10.0*pt;
+        vec2 rnd;
+        rnd.x = coord.x;
+        rnd.y = fract((gl_VertexID + 1024.7)*osg_DeltaFrameTime);
+        if(rnd.x == 0.0){
+            rnd.x = random(vec2(cos(gl_VertexID + 1237.1), fract(pt*1012.3)));
+        }
+	    coord.xy = random2(rnd);
+	    #if 0        //这样做也没什么改善
+        if(coord.y < 0.01 || coord.y > 0.99 && coord.x > 0.2){
+            coord.y = random(vec2(coord.x, fract(pt*13.27))); //再生成一次
+        }
+        #endif
+	}
+	vec2 uv = texture(uvTexture, coord.xy).rg;
+	vec2 offset = (mini + uv*mpx)*0.00002; //转换到[0, 1]
+	coord.xy = fract(coord.xy + offset);
+	coord.w = coord.w - osg_DeltaFrameTime;
+	coord.z = length(uv);
+	coordOut = coord;
+	speed = coordOut.z;
+}
+)");
+/**\brief 精灵二TransformFeedback直通顶点着色器
+ */
+const std::string sprite_pass_0_vert(R"(#version 430
+#extension GL_ARB_enhanced_layouts : enable
+uniform mat4 osg_ModelViewProjectionMatrix;
+uniform float pt; 
+uniform float h;
+in vec4 coordIn;
+layout (xfb_buffer=0, xfb_offset=0) out vec4 coordOut;
+out float speed;
+void main()
+{
+	gl_PointSize = pt;
+    coordOut = coordIn;
+    speed = coordIn.z;
+	gl_Position = osg_ModelViewProjectionMatrix*vec4(coordIn.x, 0.0, coordIn.y*0.5, 1.0);
+}
+)");
+/**\brief 精灵二TransformFeedback顶点着色器
+ */
+const std::string sprite_pass_2_vert(R"(#version 430
+#extension GL_ARB_enhanced_layouts : enable
+uniform float osg_FrameTime;
+uniform float osg_DeltaFrameTime;
+uniform mat4 osg_ModelViewProjectionMatrix;
+uniform float pt; 
+uniform float h;
+in vec4 coordIn;
+layout (xfb_buffer=0, xfb_offset=0) out vec4 coordOut;
+out float speed;
+//平面坐标转地心系XYZ
+vec3 toECEF(vec2 uv)
+{
+    const float _a = 6378137.0;
+    const float _e2 = 0.006694380047;
+    //from u[0, 1]   -> lon [-180., 180.]
+    //from v[0, 1] -> lat [-90., 90.]
+    float lon = radians(-180.0 + uv.x*360.0);
+    float lat = radians(-90.0 + uv.y*180.0);
+    float sin_lmd = sin(lon);
+    float cos_lmd = cos(lon);
+    float sin_b = sin(lat);
+    float cos_b = cos(lat);
+    float N = _a/sqrt(1. - _e2*pow(sin_b, 2.0));
+    float x = (N + h)*cos_b*cos_lmd;
+    float y = (N + h)*cos_b*sin_lmd;
+    float z = (N*(1.0 - _e2) + h)*sin_b;
+    return vec3(x, y, z);
+}
+void main()
+{
+	gl_PointSize = pt;
+    coordOut = coordIn;
+	vec3 xyz = toECEF(coordIn.xy);
+    speed = coordIn.z;
+	gl_Position = osg_ModelViewProjectionMatrix*vec4(xyz, 1.0);
+}
+)");
+/**\brief 风场精灵片元着色器二
+ */
+const std::string wind_sprite_2_frag(R"(#version 430
+vec3 colorat(float v)
+{
+    //多留了一些，避免采样不到
+    //为什么需要到呢？
+    float[24] colors = float[24](0.443137255, 0.682352941, 0.274509804, 
+                           0.443137255, 0.682352941, 0.274509804, 
+                           0.588235294, 0.717647059, 0.266666667, 
+                           0.768627451, 0.8, 0.219607843, 
+                           0.921568627, 0.882352941, 0.164705882, 
+                           0.917647059, 0.690196078, 0.149019608,
+                           0.917647059, 0.690196078, 0.149019608,
+                           0.917647059, 0.690196078, 0.149019608);
+    vec3 color;
+    int ix0 = int((floor(v*5.0))*3.0);
+    color = vec3(colors[ix0], colors[ix0 + 1], colors[ix0 + 2]);
+    return color;
+}
+in float speed;
+layout (location = 0) out vec4 frag1; 
+void main() 
+{ 
+    frag1 = vec4(colorat(speed), 1.0);
 }
 )");
 }// namespace ick
