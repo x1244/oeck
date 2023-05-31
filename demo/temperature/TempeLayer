@@ -1,0 +1,77 @@
+/**\file
+ *
+ * \brief 仿等高线实现等温线
+ * \author x1244 <x11244@126.com>
+ */
+#pragma once
+#include <osgEarth/VisibleLayer>
+#include <osgEarth/Color>
+#include <osg/Texture1D>
+#include <osg/Texture2D>
+#include <osg/TransferFunction>
+/**\brief 等温线
+ */
+namespace osgEarth
+{
+    /**
+     * Layer that renders a color ramp based on Elevation data in the Map.
+     */
+    class TemperatureLayer : public VisibleLayer
+    {
+    public:
+        class Options : public VisibleLayer::Options {
+        public:
+            META_LayerOptions(osgEarth, Options, VisibleLayer::Options);
+            struct Stop {
+                float elevation;
+                Color color;
+            };
+            OE_OPTION_VECTOR(Stop, stops);
+            virtual Config getConfig() const;
+            static Config getMetadata();
+        private:
+            void fromConfig(const Config& conf);
+        };
+
+    public:
+        META_Layer(osgEarth, TemperatureLayer, Options, VisibleLayer, Temperature);
+
+        //! Sets a custom transfer function
+        void setTransferFunction(osg::TransferFunction1D* xf);
+        osg::TransferFunction1D* getTransferFunction() const { return _xfer.get(); }
+
+    public: // Layer
+
+        //! Called by constructors
+        virtual void init() override;
+
+        //! MapNode will call this function when terrain resources are available
+        virtual void prepareForRendering(TerrainEngine*) override;
+
+        //! Release resources on close
+        virtual Status closeImplementation() override;
+
+        void applyTempSrc(osg::ref_ptr<osg::Texture> temp);
+    protected:
+
+        //! Destructor
+        virtual ~TemperatureLayer() { }
+
+#if defined(OSG_GLES2_AVAILABLE) || defined(OSG_GLES3_AVAILABLE)
+        typedef osg::Texture2D TextureType;
+#else
+        typedef osg::Texture1D TextureType;
+#endif
+
+        TextureImageUnitReservation           _reservation;
+        TextureImageUnitReservation           _resTemp;
+        osg::ref_ptr<osg::TransferFunction1D> _xfer;
+        osg::ref_ptr<TextureType>             _xferTexture;
+        osg::ref_ptr<osg::Uniform>            _xferSampler;
+        osg::ref_ptr<osg::Uniform>            _xferMin;
+        osg::ref_ptr<osg::Uniform>            _xferRange;
+        osg::ref_ptr<osg::Uniform>            _tempSampler;
+        osg::ref_ptr<osg::Texture>            _tempSrc;
+    };
+
+}//namespace osgEarth
