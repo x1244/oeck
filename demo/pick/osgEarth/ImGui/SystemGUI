@@ -1,0 +1,146 @@
+/* -*-c++-*- */
+/* osgEarth - Geospatial SDK for OpenSceneGraph
+ * Copyright 2018 Pelican Mapping
+ * http://osgearth.org
+ *
+ * osgEarth is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ */
+#ifndef OSGEARTH_IMGUI_SYSTEM_GUI
+#define OSGEARTH_IMGUI_SYSTEM_GUI
+
+#include "ImGui"
+#include <osgEarth/Threading>
+#include <osgEarth/Memory>
+#include <osgEarth/GLUtils>
+#include <osgEarth/ShaderLoader>
+#include <osgEarth/Registry>
+#include <chrono>
+#include <list>
+
+namespace osgEarth
+{
+    namespace GUI
+    {
+        using namespace osgEarth;
+        using namespace osgEarth::Threading;
+
+        class SystemGUI : public BaseGUI
+        {
+        private:
+            std::string _renderMode;
+            bool _renderViewNormals;
+            bool _renderModelNormals;
+            bool _renderWinding;
+            bool _renderOutlines;
+            bool _showArenaControls;
+
+        public:
+            SystemGUI() : BaseGUI("System"),
+                _renderViewNormals(false), _renderModelNormals(false),
+                _renderWinding(false), _renderOutlines(false),
+                _showArenaControls(false){ }
+
+            void load(const Config& conf) override
+            {
+                conf.get("ImGui.FontGlobalScale", ImGui::GetIO().FontGlobalScale);
+            }
+
+            void save(Config& conf) override
+            {
+                conf.set("ImGui.FontGlobalScale", ImGui::GetIO().FontGlobalScale);
+            }
+
+            void draw(osg::RenderInfo& ri) override
+            {
+                if (!isVisible())
+                    return;
+
+                ImGui::Begin(name(), visible());
+                {
+                    auto pb = Memory::getProcessPrivateUsage();
+                    ImGui::Text("Mem Alloc: %.1lf MB",
+                        (double)(pb - osgEarth::g_startupPrivateBytes) / 1048576.0);
+                    ImGui::SameLine();
+                    ImGui::Text(" Total: %.1lf MB", (double)pb / 1048576.0);
+                    //ImGui::Text("  WS: %u MB", (Memory::getProcessPhysicalUsage() / 1048576U));
+
+                    ImGui::Separator();
+                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Job Arenas:");
+
+                    if (ImGui::BeginTable("arenas", 2))
+                    {
+                        const JobArena::Metrics& m = JobArena::allMetrics();
+                        for (int i = 0; i <= m.maxArenaIndex; ++i)
+                        {
+                            auto metrics = m.arena(i);
+                            if (metrics)
+                            {
+                                ImGui::TableNextColumn();
+                                ImGui::Text("%s",
+                                    metrics->arenaName.c_str());
+
+                                ImGui::TableNextColumn();
+                                ImGui::Text("(%d) %d / %d // %d",
+                                    (int)metrics->concurrency,
+                                    (int)metrics->numJobsRunning,
+                                    (int)metrics->numJobsPending,
+                                    (int)metrics->numJobsCanceled);
+
+                                if (_showArenaControls)
+                                {
+                                    ImGui::TableNextColumn();
+                                    ImGui::Text("  Concurrency:");
+                                    ImGui::TableNextColumn();
+                                    ImGui::PushID(i);
+                                    int concurrency = metrics->concurrency;
+                                    if (ImGui::SliderInt("", &concurrency, 1, 16)) {
+                                        JobArena::get(metrics->arenaName)->setConcurrency(concurrency);
+                                    }
+                                    ImGui::PopID();
+                                    ImGui::Separator();
+                                }
+                            }
+                        }
+                        ImGui::EndTable();
+                    }
+                    ImGui::Separator();
+                    ImGui::Text("Total: %d", JobArena::allMetrics().totalJobs());
+                    ImGui::SameLine();
+
+                    int icojobs = 0;
+                    auto pager = view(ri)->getDatabasePager();
+                    if (pager) {
+                        auto ico = pager->getIncrementalCompileOperation();
+                        if (ico) {
+                            icojobs = ico->getToCompile().size();
+                        }
+                    }
+                    ImGui::Text(" ICO: %d", icojobs);
+                    ImGui::Checkbox("Advanced arena controls", &_showArenaControls);
+
+                    ImGui::Separator();
+
+                    if (ImGui::SliderFloat("Font Scale", &ImGui::GetIO().FontGlobalScale, 0.5f, 2.0f))
+                        dirtySettings();
+
+                    ImGui::Checkbox("Unref image data after apply",
+                        &Registry::instance()->unRefImageDataAfterApply().mutable_value());
+                }
+                ImGui::End();
+            }
+        };
+    }
+}
+
+#endif // OSGEARTH_IMGUI_SYSTEM_GUI
